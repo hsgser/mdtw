@@ -1,5 +1,5 @@
 ##   
-##  The code for MDTW is adapted from https://github.com/samcohen16/Aligning-Time-Series
+##  This file is adapted from https://github.com/samcohen16/Aligning-Time-Series
 ##    
 
 import numpy as np

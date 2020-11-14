@@ -1,5 +1,5 @@
 ##   
-##  The code for soft-DTW is adapted from https://github.com/Sleepwalking/pytorch-softdtw
+##  This file is adapted from https://github.com/Sleepwalking/pytorch-softdtw
 ##  
 
 import numpy as np

@@ -130,4 +130,11 @@ dmypy.json
 
 # Test files
 test.py
+
+# Folders
 old/
+sdtw_data/
+
+# Notebooks
+.ipynb_checkpoints/
+*.ipynb

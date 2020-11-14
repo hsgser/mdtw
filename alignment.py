@@ -9,12 +9,9 @@ from dataset import load_ucr
 from utils import *
 
 # Parameters
-N = 10 
+N = 1 
 name = "ECG200"
 M = 3
-
-# Generate steps
-steps = np.array(generate_step(M))
 
 # Load data
 X_tr, y_tr, X_te, y_te = load_ucr(name)
@@ -35,7 +32,7 @@ if torch.cuda.is_available():
         x3 = torch.from_numpy(x3).to(device)
         C = cost_tensor(x1, x2, x3)
         C = C.detach().cpu().numpy()
-        R = mdtw(C, steps)
+        R = mdtw(C)
     end = datetime.datetime.now()
     print(f"MDTW: {(end-start).total_seconds()/N} s")
 
@@ -50,6 +47,6 @@ if torch.cuda.is_available():
         x3 = torch.from_numpy(x3).to(device)
         C = cost_tensor(x1, x2, x3)
         C = C.unsqueeze(0).detach().cpu().numpy()
-        R = compute_forward(C, 1.0, steps)
+        R = compute_forward(C, 1.0)
     end = datetime.datetime.now()
     print(f"GMDTW: {(end-start).total_seconds()/N} s")

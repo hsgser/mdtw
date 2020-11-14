@@ -3,36 +3,43 @@
 ##    
 
 import numpy as np
-from numba import jit
+from utils import generate_step
 
-@jit(nopython=True)
-def mdtw(C, steps):
+def mdtw(C):
     """
-    Compute MDTW for 3 time series.
+    Compute MDTW for multiple time series.
 
     Parameters
     ----------
-    C : array, shape [m1, m2, m3]
+    C: array, shape [m_1, m_2, ..., m_M]
         Cost tensor
-    steps : array, shape [2^M-1]
-        All possible steps
 
     Returns
     -------
-    R: array, shape [m1+1, m2+1, m3+1]
+    R: array, shape [m_1+1, m_2+1, ..., m_M+1]
         Alignment tensor
     """
-    m1, m2, m3 = C.shape
-    R = np.ones((m1+1, m2+1, m3+1)) * np.inf
-    R[0,0,0] = 0
+    m = np.array(C.shape)
+    M = len(m)
+    R = np.ones(m+1) * np.inf
+    R[tuple([0]*M)] = 0.0
+    steps = generate_step(M)
+    indices = np.array([0]*M)
 
     # Forward recursion to compute MDTW
-    for i1 in range(1, m1+1):
-        for i2 in range(1, m2+1):
-            for i3 in range(1, m3+1):
-                softmin = np.inf
-                for s in steps:
-                    softmin = min(softmin, R[i1-s[0],i2-s[1],i3-s[2]])
-                R[i1,i2,i3] = C[i1-1,i2-1,i3-1] + softmin
+    def _mdtw(count):
+        if count == M:
+            softmin = np.inf
+            for s in steps:
+                softmin = min(softmin, R[tuple(indices-s)])
+            R[tuple(indices)] = C[tuple(indices-1)] + softmin
+        else:
+            for i in range(1, m[count]+1):
+                indices[count] = i
+                count += 1
+                _mdtw(count)
+                count -= 1
+
+    _mdtw(0)
     
     return R

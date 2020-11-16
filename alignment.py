@@ -3,13 +3,13 @@ import os
 import datetime
 import numpy as np
 import torch
-from mdtw import mdtw
-from gmdtw import compute_forward
+from mdtw import *
+from gmdtw import *
 from dataset import load_ucr
 from utils import *
 
 # Parameters
-N = 1 
+N = 10 
 name = "ECG200"
 M = 3
 
@@ -32,7 +32,7 @@ if torch.cuda.is_available():
         x3 = torch.from_numpy(x3).to(device)
         C = cost_tensor(x1, x2, x3)
         C = C.detach().cpu().numpy()
-        R = mdtw(C)
+        R = mdtw_3(C)
     end = datetime.datetime.now()
     print(f"MDTW: {(end-start).total_seconds()/N} s")
 
@@ -46,7 +46,7 @@ if torch.cuda.is_available():
         x2 = torch.from_numpy(x2).to(device)
         x3 = torch.from_numpy(x3).to(device)
         C = cost_tensor(x1, x2, x3)
-        C = C.unsqueeze(0).detach().cpu().numpy()
-        R = compute_forward(C, 1.0)
+        C = C.detach().cpu().numpy()
+        R = compute_forward_3(C, 1.0)
     end = datetime.datetime.now()
     print(f"GMDTW: {(end-start).total_seconds()/N} s")

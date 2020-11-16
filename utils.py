@@ -19,18 +19,18 @@ def generate_step(M):
     """
     return list(product(range(2), repeat=M))[1:]
 
-def cost_tensor(x1, x2, x3):
+def cost_tensor_3(x1, x2, x3):
     """
-    Compute cost tensor between 3 time series.
+    Compute cost tensor for 3 time series.
 
     Parameters
     ----------
-    x1, x2, x3: array, shape [m1, p], [m2, p], [m3, p]
+    x1, x2, x3: array, shape [m_1, p], [m_2, p], [m_3, p]
         Time series
 
     Returns
     -------
-    C: array, shape [m1, m2, m3]
+    C: array, shape [m_1, m_2, m_3]
         Cost tensor between time series
     """
     m1 = x1.size(0)
@@ -40,9 +40,39 @@ def cost_tensor(x1, x2, x3):
     x1 = x1.unsqueeze(1).unsqueeze(2).expand(m1, m2, m3, p)
     x2 = x2.unsqueeze(0).unsqueeze(2).expand(m1, m2, m3, p)
     x3 = x3.unsqueeze(0).unsqueeze(1).expand(m1, m2, m3, p)
-    # Pair-wise euclidean distance
-    c12 = torch.pow(x1-x2, 2).sum(3).sqrt()
-    c23 = torch.pow(x2-x3, 2).sum(3).sqrt()
-    c13 = torch.pow(x1-x3, 2).sum(3).sqrt()
+    # Pair-wise squared euclidean distance
+    c12 = torch.pow(x1-x2, 2).sum(3)
+    c23 = torch.pow(x2-x3, 2).sum(3)
+    c13 = torch.pow(x1-x3, 2).sum(3)
     C = c12 + c23 + c13
+    return C
+
+def cost_tensor(X):
+    """
+    Compute cost tensor for multiple time series.
+
+    Parameters
+    ----------
+    X: list, shape M
+        List of time series. ith time series is array with shape [m_i, p].
+
+    Returns
+    -------
+    C: array, shape [m_1, m_2, ..., m_M]
+        Cost tensor between time series
+    """
+    M = len(X)
+    m = [len(X[i]) for i in range(M)]
+    p = X[1].size(1)
+    for i in range(M):
+        for j in range(M):
+            if j != i:
+                X[i] = X[i].unsqueeze(j)
+        X[i] = X[i].expand(m + [p])
+    # Pair-wise squared euclidean distance
+    C = torch.zeros(m)
+    for i in range(M-1):
+        for j in range(i, M):
+            tmp = torch.pow(X[j]-X[i], 2).sum(-1)
+            C.add_(tmp)
     return C

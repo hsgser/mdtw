@@ -102,7 +102,7 @@ def compute_backward(C_, R, gamma):
 
     Returns
     -------
-    E: array, shape [m1+2, m2+2, m3+2]
+    E: array, shape [m1, m2, m3]
         Gradient tensor
     """
     m = np.array(C_.shape)
@@ -137,7 +137,7 @@ def compute_backward(C_, R, gamma):
 
     _backward(0)
     
-    return E
+    return E[tuple([slice(1,m[i]+1) for i in range(M)])]
 
 @jit(nopython=True)
 def compute_backward_3(C_, R, gamma):
@@ -155,7 +155,7 @@ def compute_backward_3(C_, R, gamma):
 
     Returns
     -------
-    E: array, shape [m_1+2, m_2+2, m_3+2]
+    E: array, shape [m_1, m_2, m_3]
         Gradient tensor
     """
     m1, m2, m3 = C_.shape
@@ -179,4 +179,4 @@ def compute_backward_3(C_, R, gamma):
                     tmp += np.exp(d/gamma)
                 E[i1,i2,i3] = tmp
     
-    return E
+    return E[1:m1+1, 1:m2+1, 1:m3+1]

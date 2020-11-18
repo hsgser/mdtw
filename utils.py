@@ -76,3 +76,28 @@ def cost_tensor(X):
             tmp = torch.pow(X[j]-X[i], 2).sum(-1)
             C.add_(tmp)
     return C
+
+def jacobian_product_3(x1, x2, x3, B):
+    """
+    Compute the transpose of the Jacobian applied to a tensor.
+    Jacobian is the derivative of the cost matrix w.r.t the first time series.
+    The cost used here is the sum of pair-wise squared Euclidean distance.
+
+    Parameters
+    ----------
+    x1, x2, x3: array, shape [m_1, p], [m_2, p], [m_3, p]
+        Time series
+    
+    B: array, shape [m_1, m_2, m_3]
+        Tensor
+
+    Returns
+    -------
+    S: array, shape [m_1, p]
+        Jacobian product.
+    """
+    B1 = torch.sum(B, dim=[1, 2]).unsqueeze(0).expand_as(x1.T)
+    B12 = torch.sum(B, dim=2)
+    B13 = torch.sum(B, dim=1)
+    S = 2 * x1.T * B1 - torch.matmul(x2.T, B12.T) - torch.matmul(x3.T, B13.T)
+    return S.T

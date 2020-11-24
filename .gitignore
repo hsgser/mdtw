@@ -138,3 +138,6 @@ sdtw_data/
 # Notebooks
 .ipynb_checkpoints/
 *.ipynb
+
+# Figures
+*.png

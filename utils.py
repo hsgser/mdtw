@@ -96,8 +96,9 @@ def jacobian_product_3(x1, x2, x3, B):
     S: array, shape [m_1, p]
         Jacobian product.
     """
-    B1 = torch.sum(B, dim=[1, 2]).unsqueeze(0).expand_as(x1.T)
+    B1 = torch.sum(B, dim=[1, 2]).unsqueeze(1).expand_as(x1)
     B12 = torch.sum(B, dim=2)
     B13 = torch.sum(B, dim=1)
-    S = 2 * x1.T * B1 - torch.matmul(x2.T, B12.T) - torch.matmul(x3.T, B13.T)
-    return S.T
+    # S = 2 * x1.T * B1 - torch.matmul(x2.T, B12.T) - torch.matmul(x3.T, B13.T)
+    S = 2 * x1 * B1 - torch.matmul(B12, x2) - torch.matmul(B13, x3)
+    return 2*S

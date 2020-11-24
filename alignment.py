@@ -1,5 +1,4 @@
 # Import libraries
-import os
 import datetime
 import numpy as np
 import torch
@@ -12,6 +11,7 @@ from utils import *
 N = 10 
 name = "ECG200"
 M = 3
+rng = np.random.RandomState(0)
 
 # Load data
 X_tr, y_tr, X_te, y_te = load_ucr(name)
@@ -24,9 +24,9 @@ if torch.cuda.is_available():
     # MDTW
     start = datetime.datetime.now()
     for _ in range(N):
-        k = np.random.choice(classes, 1)[0]
-        i1, i2, i3 = np.random.choice(len(X_tr), M)
-        x1, x2, x3 = X_tr[i1], X_tr[i2], X_tr[i3]
+        k = rng.randint(len(classes))
+        X = X_tr[y_tr == classes[k]]
+        x1, x2, x3 = X[rng.permutation(len(X))[:M]]
         x1 = torch.from_numpy(x1).to(device)
         x2 = torch.from_numpy(x2).to(device)
         x3 = torch.from_numpy(x3).to(device)
@@ -39,9 +39,9 @@ if torch.cuda.is_available():
     # GMDTW
     start = datetime.datetime.now()
     for _ in range(N):
-        k = np.random.choice(classes, 1)[0]
-        i1, i2, i3 = np.random.choice(len(X_tr), M)
-        x1, x2, x3 = X_tr[i1], X_tr[i2], X_tr[i3]
+        k = rng.randint(len(classes))
+        X = X_tr[y_tr == classes[k]]
+        x1, x2, x3 = X[rng.permutation(len(X))[:M]]
         x1 = torch.from_numpy(x1).to(device)
         x2 = torch.from_numpy(x2).to(device)
         x3 = torch.from_numpy(x3).to(device)

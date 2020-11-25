@@ -75,3 +75,33 @@ def mdtw_3(C):
                 R[i1,i2,i3] = C[i1-1,i2-1,i3-1] + softmin
     
     return R
+
+@jit(nopython=True)
+def mdtw_2(C):
+    """
+    Compute MDTW for 2 time series. Fast implementation using Numba.
+
+    Parameters
+    ----------
+    C: array, shape [m_1, m_2]
+        Cost tensor
+
+    Returns
+    -------
+    R: array, shape [m_1+1, m_2+1]
+        Alignment tensor
+    """
+    m1, m2 = C.shape
+    R = np.ones((m1+1, m2+1)) * np.inf
+    R[0,0] = 0
+    steps = [(0, 1), (1, 0), (1, 1)]
+
+    # Forward recursion to compute MDTW
+    for i1 in range(1, m1+1):
+        for i2 in range(1, m2+1):
+            softmin = np.inf
+            for s in steps:
+                softmin = min(softmin, R[i1-s[0],i2-s[1]])
+            R[i1,i2] = C[i1-1,i2-1] + softmin
+    
+    return R

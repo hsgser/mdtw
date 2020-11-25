@@ -47,6 +47,30 @@ def cost_tensor_3(x1, x2, x3):
     C = c12 + c23 + c13
     return C
 
+def cost_tensor_2(x1, x2):
+    """
+    Compute cost tensor for 2 time series.
+
+    Parameters
+    ----------
+    x1, x2: array, shape [m_1, p], [m_2, p]
+        Time series
+
+    Returns
+    -------
+    C: array, shape [m_1, m_2]
+        Cost tensor between time series
+    """
+    m1 = x1.size(0)
+    m2 = x2.size(0)
+    p = x1.size(1)
+    x1 = x1.unsqueeze(1).expand(m1, m2, p)
+    x2 = x2.unsqueeze(0).expand(m1, m2, p)
+    # Pair-wise squared euclidean distance
+    c12 = torch.pow(x1-x2, 2).sum(-1)
+    
+    return c12
+
 def cost_tensor(X):
     """
     Compute cost tensor for multiple time series.

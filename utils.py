@@ -123,6 +123,44 @@ def jacobian_product_3(x1, x2, x3, B):
     B1 = torch.sum(B, dim=[1, 2]).unsqueeze(1).expand_as(x1)
     B12 = torch.sum(B, dim=2)
     B13 = torch.sum(B, dim=1)
-    # S = 2 * x1.T * B1 - torch.matmul(x2.T, B12.T) - torch.matmul(x3.T, B13.T)
     S = 2 * x1 * B1 - torch.matmul(B12, x2) - torch.matmul(B13, x3)
     return 2*S
+
+def jacobian_product_2(x1, x2, B):
+    """
+    Compute the transpose of the Jacobian applied to a tensor.
+    Jacobian is the derivative of the cost matrix w.r.t the first time series.
+    The cost used here is the squared Euclidean distance.
+
+    Parameters
+    ----------
+    x1, x2: array, shape [m_1, p], [m_2, p]
+        Time series
+    
+    B: array, shape [m_1, m_2]
+        Tensor
+
+    Returns
+    -------
+    S: array, shape [m_1, p]
+        Jacobian product.
+    """
+    B1 = torch.sum(B, dim=1).unsqueeze(1).expand_as(x1)
+    S = x1 * B1 - torch.matmul(B, x2)
+    return 2*S
+
+def jacobian_product_(x1, x2, B):
+    """
+    Slow implementation of Jacobian product.
+    For comparison only.
+    """
+    m1, m2 = B.size()
+    d = x1.size(1)
+    S = torch.zeros((m1, d))
+
+    for i in range(m1):
+        for j in range(m2):
+            for k in range(d):
+                S[i, k] += B[i,j] * 2 * (x1[i, k] - x2[j, k])
+    
+    return S

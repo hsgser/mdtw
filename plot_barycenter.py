@@ -1,5 +1,5 @@
 # Import libraries
-from barycenter import gmdtw_3_barycenter
+from barycenter import *
 import datetime
 import numpy as np
 import torch
@@ -11,7 +11,7 @@ plt.rcParams["ytick.labelsize"] = 15
 
 # Parameters
 name = "ECG200"
-M = 2
+M = 10
 rng = np.random.RandomState(0)
 
 # Load data
@@ -36,7 +36,7 @@ if torch.cuda.is_available():
             ax.plot(x.view(-1), c="k", linewidth=3, alpha=0.15)
         
         start = datetime.datetime.now()
-        y = gmdtw_3_barycenter(X, gamma=gamma, lr=1e-6)
+        y = gmdtw_barycenter_2(X, gamma=gamma, lr=1e-4)
         y = y.detach().cpu().numpy()
         end = datetime.datetime.now()
         print(f"gamma = {gamma}: {(end-start).total_seconds()} s")

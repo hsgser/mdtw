@@ -161,7 +161,7 @@ def compute_backward(C_, R, gamma):
             tmp = 0.0
             for s in steps:
                 d = R[tuple(indices+s)] - R[tuple(indices)] - C[tuple(indices+s)]
-                tmp += np.exp(d/gamma)
+                tmp += np.exp(d/gamma) * E[tuple(indices+s)]
             E[tuple(indices)] = tmp
         else:
             for i in range(1, m[count]+1):
@@ -211,7 +211,7 @@ def compute_backward_3(C_, R, gamma):
                 tmp = 0.0
                 for s in steps:
                     d = R[i1+s[0],i2+s[1],i3+s[2]] - R[i1,i2,i3] - C[i1+s[0],i2+s[1],i3+s[2]]
-                    tmp += np.exp(d/gamma)
+                    tmp += np.exp(d/gamma) * E[i1+s[0],i2+s[1],i3+s[2]]
                 E[i1,i2,i3] = tmp
     
     return E[1:m1+1, 1:m2+1, 1:m3+1]
@@ -251,7 +251,7 @@ def compute_backward_2(C_, R, gamma):
             tmp = 0.0
             for s in steps:
                 d = R[i1+s[0],i2+s[1]] - R[i1,i2] - C[i1+s[0],i2+s[1]]
-                tmp += np.exp(d/gamma)
+                tmp += np.exp(d/gamma) * E[i1+s[0],i2+s[1]]
             E[i1,i2] = tmp
     
     return E[1:m1+1, 1:m2+1]

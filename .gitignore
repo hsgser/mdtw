@@ -134,6 +134,7 @@ test.py
 # Folders
 old/
 sdtw_data/
+results/
 
 # Notebooks
 .ipynb_checkpoints/

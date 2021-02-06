@@ -1,7 +1,7 @@
-import numpy as np
-from numba import jit
 from itertools import product
 import torch
+import os
+import datetime
 
 def generate_step(M):
     """
@@ -124,7 +124,7 @@ def jacobian_product_3(x1, x2, x3, B):
     B12 = torch.sum(B, dim=2)
     B13 = torch.sum(B, dim=1)
     S = 2 * x1 * B1 - torch.matmul(B12, x2) - torch.matmul(B13, x3)
-    return 2*S
+    return 2 * S
 
 def jacobian_product_2(x1, x2, B):
     """
@@ -147,7 +147,7 @@ def jacobian_product_2(x1, x2, B):
     """
     B1 = torch.sum(B, dim=1).unsqueeze(1).expand_as(x1)
     S = x1 * B1 - torch.matmul(B, x2)
-    return 2*S
+    return 2 * S
 
 def jacobian_product_(x1, x2, B):
     """
@@ -164,3 +164,18 @@ def jacobian_product_(x1, x2, B):
                 S[i, k] += B[i,j] * 2 * (x1[i, k] - x2[j, k])
     
     return S
+
+def write_loss_to_file(loss_file, loss, gammas):
+    """
+    Store experiment loss
+    """
+    if os.path.isfile(loss_file):
+        with open(loss_file, "a") as f:
+            f.write(str(datetime.datetime.now()) + ",")
+            f.write(",".join([str(loss[gamma]) for gamma in gammas]) + "\n")
+    else:
+        with open(loss_file, "w") as f:
+            f.write("time,")
+            f.write(",".join([str(x) for x in gammas]) + "\n")
+            f.write(str(datetime.datetime.now()) + ",")
+            f.write(",".join([str(loss[gamma]) for gamma in gammas]) + "\n")

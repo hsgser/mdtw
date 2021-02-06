@@ -5,6 +5,7 @@
 import numpy as np
 from utils import generate_step
 from numba import jit
+from sklearn.metrics.pairwise import euclidean_distances
 
 def mdtw(C):
     """
@@ -105,3 +106,16 @@ def mdtw_2(C):
             R[i1,i2] = C[i1-1,i2-1] + softmin
     
     return R
+
+def dtw_loss(X, y):
+    length = len(X)
+    weights = np.ones(length)/length
+    X = np.array(X)
+    y = np.array(y)
+    loss = 0
+
+    for i in range(length):
+        C = euclidean_distances(y, X[i], squared=True)
+        loss += weights[i] * mdtw_2(C)[-1, -1]
+
+    return loss

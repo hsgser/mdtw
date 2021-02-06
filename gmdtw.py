@@ -4,7 +4,7 @@
 
 import numpy as np
 import torch
-from utils import generate_step
+from utils import *
 from numba import jit
 
 def compute_forward(C, gamma):
@@ -118,6 +118,29 @@ def compute_forward_2(C, gamma):
             rmax = r.max()
             rsum = np.exp(r - rmax).sum()
             softmin = -gamma * (np.log(rsum) + rmax)
+            R[i1,i2] = C[i1-1,i2-1] + softmin
+    
+    return R
+
+def compute_forward_2_pytorch(C, gamma):
+    """
+    Using pytorch
+    """
+    m1, m2 = C.size()
+    R = torch.ones(m1+2, m2+2) * float('inf')
+    # R = torch.ones(m1+2, m2+2, requires_grad=True) * float('inf')
+    R[0,0] = 0.0
+    steps = [(0, 1), (1, 0), (1, 1)]
+
+    # Forward recursion to compute GMDTW
+    for i1 in range(1, m1+1):
+        for i2 in range(1, m2+1):
+            r = torch.zeros(len(steps))
+            for j, s in enumerate(steps):
+                r[j] = -R[i1-s[0],i2-s[1]]/gamma
+            rmax = r.max()
+            rsum = torch.exp(r - rmax).sum()
+            softmin = -gamma * (torch.log(rsum) + rmax)
             R[i1,i2] = C[i1-1,i2-1] + softmin
     
     return R
@@ -255,3 +278,77 @@ def compute_backward_2(C_, R, gamma):
             E[i1,i2] = tmp
     
     return E[1:m1+1, 1:m2+1]
+
+class GMDTW2_Loss(torch.autograd.Function):
+    """
+    Custom autograd function of GMDTW.
+    """
+    @staticmethod
+    def forward(ctx, x1, x2, gamma):
+        dev = x1.device
+        dtype = x1.dtype
+        gamma = torch.Tensor([gamma]).to(dev).type(dtype)
+        C = cost_tensor_2(x1, x2)
+        C_ = C.detach().cpu().numpy()
+        g_ = gamma.item()
+        R = torch.Tensor(compute_forward_2(C_, g_)).to(dev).type(dtype)
+        ctx.save_for_backward(C, R, x1, x2, gamma)
+
+        return R[-2, -2]
+    
+    @staticmethod
+    def backward(ctx, grad_output):
+        dev = grad_output.device
+        dtype = grad_output.dtype
+        C, R, x1, x2, gamma = ctx.saved_tensors
+        C_ = C.detach().cpu().numpy()
+        R_ = R.detach().cpu().numpy()
+        g_ = gamma.item()
+        E = torch.Tensor(compute_backward_2(C_, R_, g_)).to(dev).type(dtype)
+        G = jacobian_product_2(x1, x2, E)
+
+        return G, None, None 
+
+class GMDTW3_Loss(torch.autograd.Function):
+    """
+    Custom autograd function of GMDTW.
+    """
+    @staticmethod
+    def forward(ctx, x1, x2, x3, gamma):
+        dev = x1.device
+        dtype = x1.dtype
+        gamma = torch.Tensor([gamma]).to(dev).type(dtype)
+        C = cost_tensor_3(x1, x2, x3)
+        C_ = C.detach().cpu().numpy()
+        g_ = gamma.item()
+        R = torch.Tensor(compute_forward_3(C_, g_)).to(dev).type(dtype)
+        ctx.save_for_backward(C, R, x1, x2, x3, gamma)
+
+        return R[-2, -2, -2]
+    
+    @staticmethod
+    def backward(ctx, grad_output):
+        dev = grad_output.device
+        dtype = grad_output.dtype
+        C, R, x1, x2, x3, gamma = ctx.saved_tensors
+        C_ = C.detach().cpu().numpy()
+        R_ = R.detach().cpu().numpy()
+        g_ = gamma.item()
+        E = torch.Tensor(compute_backward_3(C_, R_, g_)).to(dev).type(dtype)
+        G = jacobian_product_3(x1, x2, x3, E)
+
+        return G, None, None, None 
+
+class GMDTW(torch.nn.Module):
+    def __init__(self, gamma=1.0, version=2):
+        super(GMDTW, self).__init__()
+        self.gamma = gamma
+        self.version = version
+    
+    def forward(self, y, X):
+        if self.version == 2:
+            return GMDTW2_Loss.apply(y, *X, self.gamma)
+        elif self.version == 3:
+            return GMDTW3_Loss.apply(y, *X, self.gamma)
+        else:
+            raise ValueError("Support version either 2 or 3!")
